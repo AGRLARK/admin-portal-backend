@@ -1,7 +1,7 @@
 const Partner = require('../models/partnerSchema');
 const { AsyncHandler } = require('../utils/AsyncHandler');
-const  ApiResponse  = require('../utils/ApiResponse');
-const ApiError  = require('../utils/ApiError');
+const ApiResponse = require('../utils/ApiResponse');
+const ApiError = require('../utils/ApiError');
 
 // Create partner (optional)
 exports.createPartner = AsyncHandler(async (req, res, next) => {
@@ -39,9 +39,64 @@ exports.searchPartners = AsyncHandler(async (req, res, next) => {
     );
 });
 
-// Optional: get single partner
+// get single partner
 exports.getPartnerById = AsyncHandler(async (req, res, next) => {
     const partner = await Partner.findById(req.params.id);
     if (!partner) return next(new ApiError(404, 'Partner not found'));
     res.status(200).json(new ApiResponse(200, { partner }, 'Partner retrieved'));
+});
+
+
+// Get all partners (with pagination & sorting)
+exports.getAllPartners = AsyncHandler(async (req, res, next) => {
+    const { sort = '-createdAt' } = req.query;
+
+    // Fetch all partners without pagination
+    const partners = await Partner.find().sort(sort);
+
+    res.status(200).json(
+        new ApiResponse(200, {
+            partners,
+        }, 'Partners retrieved successfully')
+    );
+});
+
+
+// Update partner
+exports.updatePartner = AsyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+
+    // Check if partner exists
+    const existingPartner = await Partner.findById(id);
+    if (!existingPartner) {
+        return next(new ApiError(404, 'Partner not found'));
+    }
+
+    // Add tracking fields to the update data
+    const updateData = {
+        ...req.body,
+        updatedBy: req.admin?.id,
+        lastUpdated: new Date()
+    };
+
+    // Update partner with validation
+    const updatedPartner = await Partner.findByIdAndUpdate(
+        id,
+        updateData,
+        { 
+            new: true,           // Return updated document
+            runValidators: true  // Run schema validations
+        }
+    );
+
+    res.status(200).json(
+        new ApiResponse(200, { partner: updatedPartner }, 'Partner updated successfully')
+    );
+});
+
+// Delete partner
+exports.deletePartner = AsyncHandler(async (req, res, next) => {
+    const partner = await Partner.findByIdAndDelete(req.params.id);
+    if (!partner) return next(new ApiError(404, 'Partner not found'));
+    res.status(200).json(new ApiResponse(200, {}, 'Partner deleted successfully'));
 });

@@ -22,7 +22,21 @@ exports.registerAdmin = AsyncHandler(async (req, res, next) => {
         expiresIn: '7d'
     });
 
-    res.status(201).json(new ApiResponse(201, { admin, token }, 'Admin registered successfully'));
+    // Return the exact structure your frontend expects
+    res.status(201).json({
+        success: true,
+        data: {
+            admin: {
+                _id: admin._id,
+                name: admin.name,
+                email: admin.email,
+                role: admin.role
+            },
+            token: token
+        },
+        message: 'Admin registered successfully',
+        statusCode: 201
+    });
 });
 
 // Login admin
