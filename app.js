@@ -25,6 +25,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
+app.get('/', (req, res) => {
+    res.status(200).json({ status: 'success', message: 'Server is running 🚀' });
+});
+
+// Health check route
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'success', message: 'OK', uptime: process.uptime() });
+});
+
+
 // Routes
 app.use('/api/auth', adminRoutes);
 app.use('/api/partners', partnerRoutes);
